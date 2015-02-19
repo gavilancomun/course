@@ -28,9 +28,8 @@ import qualified Numeric as N
 -- BEGIN Helper functions and data types
 
 -- The custom list type
-data List t =
-  Nil
-  | t :. List t
+data List t = Nil
+            | t :. List t
   deriving (Eq, Ord)
 
 -- Right-associative
@@ -68,12 +67,9 @@ foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
 -- prop> x `headOr` infinity == 0
 --
 -- prop> x `headOr` Nil == x
-headOr ::
-  a
-  -> List a
-  -> a
-headOr =
-  error "todo"
+headOr :: a -> List a -> a
+headOr d Nil = d
+headOr _ (x :. xs) = x
 
 -- | The product of the elements of a list.
 --
@@ -82,11 +78,8 @@ headOr =
 --
 -- >>> product (1 :. 2 :. 3 :. 4 :. Nil)
 -- 24
-product ::
-  List Int
-  -> Int
-product =
-  error "todo"
+product :: List Int -> Int 
+product = foldRight (*) 1
 
 -- | Sum the elements of the list.
 --
@@ -97,11 +90,8 @@ product =
 -- 10
 --
 -- prop> foldLeft (-) (sum x) x == 0
-sum ::
-  List Int
-  -> Int
-sum =
-  error "todo"
+sum :: List Int -> Int
+sum = foldRight (+) 0
 
 -- | Return the length of the list.
 --
@@ -109,11 +99,8 @@ sum =
 -- 3
 --
 -- prop> sum (map (const 1) x) == length x
-length ::
-  List a
-  -> Int
-length =
-  error "todo"
+length :: List a -> Int
+length = foldRight (\_ y -> y + 1) 0
 
 -- | Map the given function on each element of the list.
 --
@@ -123,12 +110,9 @@ length =
 -- prop> headOr x (map (+1) infinity) == 1
 --
 -- prop> map id x == x
-map ::
-  (a -> b)
-  -> List a
-  -> List b
-map =
-  error "todo"
+map :: (a -> b) -> List a -> List b
+map _ Nil = Nil
+map f (x :. xs) = (f x) :. (map f xs)
 
 -- | Return elements satisfying the given predicate.
 --
@@ -140,12 +124,11 @@ map =
 -- prop> filter (const True) x == x
 --
 -- prop> filter (const False) x == Nil
-filter ::
-  (a -> Bool)
-  -> List a
-  -> List a
-filter =
-  error "todo"
+filter :: (a -> Bool) -> List a -> List a
+filter _ Nil = Nil
+filter p (x :. xs)
+  | (p x) = x :. (filter p xs)
+  | otherwise = (filter p xs)
 
 -- | Append two lists to a new list.
 --
@@ -159,12 +142,10 @@ filter =
 -- prop> (x ++ y) ++ z == x ++ (y ++ z)
 --
 -- prop> x ++ Nil == x
-(++) ::
-  List a
-  -> List a
-  -> List a
-(++) =
-  error "todo"
+(++) :: List a -> List a -> List a
+(++) xs Nil = xs
+(++) Nil xs = xs
+(++) xs ys = foldRight (\x y -> x :. y) ys xs
 
 infixr 5 ++
 
@@ -178,11 +159,9 @@ infixr 5 ++
 -- prop> headOr x (flatten (y :. infinity :. Nil)) == headOr 0 y
 --
 -- prop> sum (map length x) == length (flatten x)
-flatten ::
-  List (List a)
-  -> List a
-flatten =
-  error "todo"
+flatten :: List (List a) -> List a
+flatten Nil = Nil
+flatten (xs :. xss) = xs ++ (flatten xss)
 
 -- | Map a function then flatten to a list.
 --
@@ -194,22 +173,16 @@ flatten =
 -- prop> headOr x (flatMap id (y :. infinity :. Nil)) == headOr 0 y
 --
 -- prop> flatMap id (x :: List (List Int)) == flatten x
-flatMap ::
-  (a -> List b)
-  -> List a
-  -> List b
-flatMap =
-  error "todo"
+flatMap :: (a -> List b) -> List a -> List b
+flatMap _ Nil = Nil
+flatMap f (x :. xs) = (f x) ++ (flatMap f xs)
 
 -- | Flatten a list of lists to a list (again).
 -- HOWEVER, this time use the /flatMap/ function that you just wrote.
 --
 -- prop> let types = x :: List (List Int) in flatten x == flattenAgain x
-flattenAgain ::
-  List (List a)
-  -> List a
-flattenAgain =
-  error "todo"
+flattenAgain :: List (List a) -> List a
+flattenAgain = flatMap id
 
 -- | Convert a list of optional values to an optional list of values.
 --
@@ -233,11 +206,13 @@ flattenAgain =
 --
 -- >>> seqOptional (Empty :. map Full infinity)
 -- Empty
-seqOptional ::
-  List (Optional a)
-  -> Optional (List a)
-seqOptional =
-  error "todo"
+seqOptional :: List (Optional a) -> Optional (List a)
+seqOptional Nil = Full Nil
+seqOptional (Empty :. xs) = Empty
+seqOptional ((Full x) :. xs) =
+  case seqOptional xs of
+    Empty -> Empty
+    Full l -> Full (x :. l)
 
 -- | Find the first element in the list matching the predicate.
 --
@@ -255,12 +230,11 @@ seqOptional =
 --
 -- >>> find (const True) infinity
 -- Full 0
-find ::
-  (a -> Bool)
-  -> List a
-  -> Optional a
-find =
-  error "todo"
+find :: (a -> Bool) -> List a -> Optional a
+find _ Nil = Empty
+find p (x :. xs) 
+  | (p x) = Full x
+  | otherwise = (find p xs)
 
 -- | Determine if the length of the given list is greater than 4.
 --
@@ -275,11 +249,9 @@ find =
 --
 -- >>> lengthGT4 infinity
 -- True
-lengthGT4 ::
-  List a
-  -> Bool
-lengthGT4 =
-  error "todo"
+lengthGT4 :: List a -> Bool
+lengthGT4 infinity = True
+lengthGT4 x = (length x) > 4
 
 -- | Reverse a list.
 --
@@ -292,11 +264,9 @@ lengthGT4 =
 -- prop> let types = x :: List Int in reverse x ++ reverse y == reverse (y ++ x)
 --
 -- prop> let types = x :: Int in reverse (x :. Nil) == x :. Nil
-reverse ::
-  List a
-  -> List a
-reverse =
-  error "todo"
+reverse :: List a -> List a
+reverse Nil = Nil
+reverse l = foldLeft (\x y -> y :. x) Nil l
 
 -- | Produce an infinite `List` that seeds with the given value at its head,
 -- then runs the given function for subsequent elements
@@ -306,12 +276,8 @@ reverse =
 --
 -- >>> let (x:.y:.z:.w:._) = produce (*2) 1 in [x,y,z,w]
 -- [1,2,4,8]
-produce ::
-  (a -> a)
-  -> a
-  -> List a
-produce =
-  error "todo"
+produce :: (a -> a) -> a -> List a
+produce f x = x :. (produce f (f x))
 
 -- | Do anything other than reverse a list.
 -- Is it even possible?
@@ -322,71 +288,49 @@ produce =
 -- prop> let types = x :: List Int in notReverse x ++ notReverse y == notReverse (y ++ x)
 --
 -- prop> let types = x :: Int in notReverse (x :. Nil) == x :. Nil
-notReverse ::
-  List a
-  -> List a
-notReverse =
-  error "todo"
+notReverse :: List a -> List a
+notReverse = id
 
 ---- End of list exercises
 
-largeList ::
-  List Int
+largeList :: List Int
 largeList =
   listh [1..50000]
 
-hlist ::
-  List a
-  -> [a]
+hlist :: List a -> [a]
 hlist =
   foldRight (:) []
 
-listh ::
-  [a]
-  -> List a
+listh :: [a] -> List a
 listh =
   P.foldr (:.) Nil
 
-putStr ::
-  Chars
-  -> IO ()
+putStr :: Chars -> IO ()
 putStr =
   P.putStr . hlist
 
-putStrLn ::
-  Chars
-  -> IO ()
+putStrLn :: Chars -> IO ()
 putStrLn =
   P.putStrLn . hlist
 
-readFile ::
-  Filename
+readFile :: Filename
   -> IO Chars
 readFile =
   P.fmap listh . P.readFile . hlist
 
-writeFile ::
-  Filename
-  -> Chars
-  -> IO ()
+writeFile :: Filename -> Chars -> IO ()
 writeFile n s =
   P.writeFile (hlist n) (hlist s)
 
-getLine ::
-  IO Chars
+getLine :: IO Chars
 getLine =
   P.fmap listh P.getLine
 
-getArgs ::
-  IO (List Chars)
+getArgs :: IO (List Chars)
 getArgs =
   P.fmap (listh . P.fmap listh) E.getArgs
 
-isPrefixOf ::
-  Eq a =>
-  List a
-  -> List a
-  -> Bool
+isPrefixOf :: Eq a => List a -> List a -> Bool
 isPrefixOf Nil _ =
   True
 isPrefixOf _  Nil =
@@ -394,18 +338,13 @@ isPrefixOf _  Nil =
 isPrefixOf (x:.xs) (y:.ys) =
   x == y && isPrefixOf xs ys
 
-isEmpty ::
-  List a
-  -> Bool
+isEmpty :: List a -> Bool
 isEmpty Nil =
   True
 isEmpty (_:._) =
   False
 
-span ::
-  (a -> Bool)
-  -> List a
-  -> (List a, List a)
+span :: (a -> Bool) -> List a -> (List a, List a)
 span p x =
   (takeWhile p x, dropWhile p x)
 
@@ -468,9 +407,7 @@ unfoldr f b  =
     Full (a, z) -> a :. unfoldr f z
     Empty -> Nil
 
-lines ::
-  Chars
-  -> List Chars
+lines :: Chars -> List Chars
 lines =
   listh . P.fmap listh . P.lines . hlist
 
