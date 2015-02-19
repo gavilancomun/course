@@ -69,7 +69,7 @@ foldLeft f b (h :. t) = let b' = f b h in b' `seq` foldLeft f b' t
 -- prop> x `headOr` Nil == x
 headOr :: a -> List a -> a
 headOr d Nil = d
-headOr _ (x :. xs) = x
+headOr _ (x :. _) = x
 
 -- | The product of the elements of a list.
 --
@@ -208,7 +208,7 @@ flattenAgain = flatMap id
 -- Empty
 seqOptional :: List (Optional a) -> Optional (List a)
 seqOptional Nil = Full Nil
-seqOptional (Empty :. xs) = Empty
+seqOptional (Empty :. _) = Empty
 seqOptional ((Full x) :. xs) =
   case seqOptional xs of
     Empty -> Empty
@@ -250,8 +250,8 @@ find p (x :. xs)
 -- >>> lengthGT4 infinity
 -- True
 lengthGT4 :: List a -> Bool
-lengthGT4 infinity = True
-lengthGT4 x = (length x) > 4
+lengthGT4 (_ :. _ :. _ :. _ :. _ :. _) = True
+lengthGT4 _ = False
 
 -- | Reverse a list.
 --
@@ -289,7 +289,9 @@ produce f x = x :. (produce f (f x))
 --
 -- prop> let types = x :: Int in notReverse (x :. Nil) == x :. Nil
 notReverse :: List a -> List a
-notReverse = id
+notReverse Nil = Nil
+notReverse (x :. Nil) = x :. Nil
+notReverse (x :. xs) = (x :. xs)
 
 ---- End of list exercises
 
