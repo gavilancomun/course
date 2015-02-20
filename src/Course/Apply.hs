@@ -206,7 +206,7 @@ lift4 g ma mb mc md = (g <$> ma) <*> mb <*> mc <*> md
   -> f b
   -> f b
 (*>) =
-  error "todo"
+ lift2 (const id)
 
 -- | Sequence, discarding the value of the second argument.
 -- Pronounced, left apply.
@@ -232,7 +232,7 @@ lift4 g ma mb mc md = (g <$> ma) <*> mb <*> mc <*> md
   -> f a
   -> f b
 (<*) =
-  error "todo"
+  lift2 const
 
 -----------------------
 -- SUPPORT LIBRARIES --
