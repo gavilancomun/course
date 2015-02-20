@@ -68,8 +68,7 @@ infixr 1 =<<
   f (a -> b)
   -> f a
   -> f b
-(<*>) =
-  error "todo"
+mg <*> ma = (<$> ma) =<< mg
 
 infixl 4 <*>
 
@@ -82,8 +81,7 @@ instance Bind Id where
     (a -> Id b)
     -> Id a
     -> Id b
-  (=<<) =
-    error "todo"
+  (=<<) f (Id a) = f a
 
 -- | Binds a function on a List.
 --
@@ -94,8 +92,7 @@ instance Bind List where
     (a -> List b)
     -> List a
     -> List b
-  (=<<) =
-    error "todo"
+  (=<<) f xs = foldRight (\a b -> (f a) ++ b) Nil xs
 
 -- | Binds a function on an Optional.
 --
@@ -106,8 +103,9 @@ instance Bind Optional where
     (a -> Optional b)
     -> Optional a
     -> Optional b
-  (=<<) =
-    error "todo"
+  (=<<) f Empty = Empty
+  (=<<) f (Full a) = f a
+    
 
 -- | Binds a function on the reader ((->) t).
 --
